@@ -40,5 +40,8 @@ else:
     }
 
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": ()
+    "DEFAULT_AUTHENTICATION_CLASSES": (),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.AllowAny",),
+    # 未引入 django.contrib.auth / contenttypes，置空避免导入 AnonymousUser
+    "UNAUTHENTICATED_USER": None,
 }

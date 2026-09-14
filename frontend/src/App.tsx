@@ -1,30 +1,17 @@
-import { useEffect, useState } from "react";
-import { Button, ConfigProvider, Layout, Typography, theme } from "antd";
+import { ConfigProvider, Layout, Typography, theme } from "antd";
 import { ApiOutlined } from "@ant-design/icons";
-import { fetchOverview } from "./api/client";
+import { Link, NavLink, Route, Routes } from "react-router-dom";
 import { APP_CODE, APP_NAME, APP_THEME } from "./constants/app";
 import { REQUEST_MESSAGES } from "./constants/messages";
-import { createFallbackOverview } from "./state/dashboard";
-import type { OverviewResponse } from "./types";
-import { FeatureStrip } from "./components/FeatureStrip";
-import { MetricGrid } from "./components/MetricGrid";
-import { OperationsTable } from "./components/OperationsTable";
+import { navItems } from "./routes";
+import { OverviewPage } from "./pages/OverviewPage";
+import { RouteListPage } from "./pages/RouteListPage";
+import { RouteEditorPage } from "./pages/RouteEditorPage";
+import { RouteDetailPage } from "./pages/RouteDetailPage";
 
 const { Header, Content } = Layout;
 
 export default function App() {
-  const [overview, setOverview] = useState<OverviewResponse>(createFallbackOverview());
-  const [notice, setNotice] = useState(REQUEST_MESSAGES.overviewFallback);
-
-  useEffect(() => {
-    fetchOverview()
-      .then((payload) => {
-        setOverview(payload);
-        setNotice("后端服务已联通，当前展示实时接口数据。");
-      })
-      .catch(() => setNotice(REQUEST_MESSAGES.overviewFallback));
-  }, []);
-
   return (
     <ConfigProvider
       theme={{
@@ -41,25 +28,43 @@ export default function App() {
         <Header className="topbar">
           <div className="brand-block">
             <span className="brand-code">{APP_CODE}</span>
-            <h1 className="brand-title">{APP_NAME}</h1>
+            <h1 className="brand-title">
+              <Link to="/">{APP_NAME}</Link>
+            </h1>
           </div>
-          <Button type="primary" icon={<ApiOutlined />} href={REQUEST_MESSAGES.healthPath}>API Health</Button>
+          <div className="topbar-right">
+            <nav className="topnav">
+              {navItems.map((item) => (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  end={item.path === "/"}
+                  className={({ isActive }) =>
+                    `topnav-link${isActive ? " topnav-link-active" : ""}`
+                  }
+                >
+                  {item.label}
+                </NavLink>
+              ))}
+            </nav>
+            <a className="health-link" href={REQUEST_MESSAGES.healthPath}>
+              <ApiOutlined /> API Health
+            </a>
+          </div>
         </Header>
         <Content className="workspace">
-          <section className="lead-grid">
-            <article className="hero-panel">
-              <span className="pill">{notice}</span>
-              <Typography.Title level={2}>{overview.appName}</Typography.Title>
-              <p>{overview.description}</p>
-            </article>
-            <MetricGrid items={overview.kpis} />
-          </section>
-          <FeatureStrip items={overview.features} />
-          <section className="work-panel">
-            <Typography.Title level={3}>运营任务流</Typography.Title>
-            <OperationsTable records={overview.records} />
-          </section>
+          <Routes>
+            <Route path="/" element={<OverviewPage />} />
+            <Route path="/routes" element={<RouteListPage />} />
+            <Route path="/routes/new" element={<RouteEditorPage />} />
+            <Route path="/routes/:id/edit" element={<RouteEditorPage />} />
+            <Route path="/routes/:id" element={<RouteDetailPage />} />
+            <Route path="*" element={<OverviewPage />} />
+          </Routes>
         </Content>
+        <Typography.Paragraph className="app-footer">
+          城市定向越野活动平台 · 线路编排与发布
+        </Typography.Paragraph>
       </Layout>
     </ConfigProvider>
   );

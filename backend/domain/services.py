@@ -111,3 +111,53 @@ OVERVIEW = {
 
 def get_overview():
     return OVERVIEW
+
+
+def _is_blank(value):
+    return value is None or str(value).strip() == ""
+
+
+def collect_publish_errors(route):
+    """发布前校验线路，返回缺失项 / 错误提示列表；列表为空即表示可发布。
+
+    校验规则（与需求一一对应）：
+    - 必须填写起点、终点
+    - 必须选择难度、填写有效的预计时长
+    - 至少包含一个打卡点，且每个打卡点的线索、任务均不能为空
+    - 打卡点顺序不能重复
+    """
+    errors = []
+
+    if _is_blank(route.start_point):
+        errors.append("未填写起点")
+    if _is_blank(route.end_point):
+        errors.append("未填写终点")
+    if _is_blank(route.difficulty):
+        errors.append("未选择难度")
+    if route.estimated_duration is None:
+        errors.append("未填写预计时长")
+    elif route.estimated_duration <= 0:
+        errors.append("预计时长必须大于 0 分钟")
+
+    checkpoints = list(route.checkpoints.all())
+    if not checkpoints:
+        errors.append("至少需要添加 1 个打卡点")
+    else:
+        seen_orders = set()
+        duplicate_orders = set()
+        for cp in checkpoints:
+            if cp.order in seen_orders:
+                duplicate_orders.add(cp.order)
+            seen_orders.add(cp.order)
+            if _is_blank(cp.clue):
+                label = cp.name.strip() or f"第 {cp.order} 个打卡点"
+                errors.append(f"打卡点「{label}」未填写线索")
+            if _is_blank(cp.task):
+                label = cp.name.strip() or f"第 {cp.order} 个打卡点"
+                errors.append(f"打卡点「{label}」未填写任务")
+        if duplicate_orders:
+            ordered = sorted(duplicate_orders)
+            rendered = "、".join(str(n) for n in ordered)
+            errors.append(f"打卡点顺序重复（第 {rendered} 位），请调整后再发布")
+
+    return errors

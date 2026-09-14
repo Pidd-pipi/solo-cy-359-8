@@ -1,5 +1,4 @@
-export const routes = [
+export const navItems = [
   { path: "/", label: "运营总览" },
-  { path: "/resources", label: "资源管理" },
-  { path: "/analytics", label: "数据分析" },
+  { path: "/routes", label: "活动线路" },
 ];

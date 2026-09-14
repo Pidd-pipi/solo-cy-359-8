@@ -12,3 +12,7 @@ backend/**/*.pyc
 coverage/
 .pytest_cache/
 *.class
+backend/db.sqlite3
+backend/db.sqlite3-journal
+frontend/coverage/
+.vitest-cache/
